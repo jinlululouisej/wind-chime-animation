@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pink Unicorn Physics - jinlululouisej's Magical World</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fad0c4 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+        }
+
+        /* Magical background particles */
+        .magic-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #fff 0%, #ffb3d9 100%);
+            border-radius: 50%;
+            animation: magicFloat 12s linear infinite;
+            pointer-events: none;
+            box-shadow: 0 0 10px #ffb3d9;
+        }
+
+        @keyframes magicFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) translateX(10px) rotate(36deg) scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) translateX(100px) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Game container */
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        /* Unicorn element */
+        .unicorn {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiBmaWxsPSJyZ2JhKDI1NSwgMTgyLCAxOTMsIDAuOSkiIHJ4PSIxNSIvPgo8dGV4dCB4PSI2MCIgeT0iNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0OCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+mhDwvdGV4dD4KPC9zdmc+');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 15px;
+            cursor: grab;
+            transition: all 0.1s ease;
+            filter: drop-shadow(0 8px 16px rgba(255, 182, 193, 0.6));
+            z-index: 100;
+        }
+
+        .unicorn:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 12px 24px rgba(255, 182, 193, 0.8));
+        }
+
+        .unicorn:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        /* Sparkle trail */
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #fff 0%, #ff69b4 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkleTrail 2s ease-out forwards;
+            box-shadow: 0 0 15px #ff69b4;
+        }
+
+        @keyframes sparkleTrail {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(360deg);
+            }
+        }
+
+        /* Collision impact effect */
+        .impact-effect {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ff69b4;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: impactRipple 0.6s ease-out forwards;
+        }
+
+        @keyframes impactRipple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+                border-width: 6px;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+
+        /* Heart explosion effect */
+        .heart-explosion {
+            position: absolute;
+            font-size: 20px;
+            pointer-events: none;
+            animation: heartBurst 1.5s ease-out forwards;
+        }
+
+        @keyframes heartBurst {
+            0% {
+                opacity: 1;
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(360deg) translateY(-100px);
+            }
+        }
+
+        /* Control panel */
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.4);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #d63384;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .control-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff6b9d, #ff8fa3);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.5);
+            background: linear-gradient(45deg, #ff8fa3, #ff6b9d);
+        }
+
+        .control-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Physics settings */
+        .physics-controls {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #ffb3d9;
+        }
+
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #d63384;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #ffb3d9, #ff69b4);
+            outline: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff69b4;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Stats display */
+        .stats-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.4);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .stats-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d63384;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #8b5a8c;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #d63384;
+        }
+
+        /* Welcome message */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 182, 193, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: welcomeFade 4s ease-in-out 3s forwards;
+        }
+
+        .welcome-content {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: welcomePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes welcomeFade {
+            0% {
+                opacity: 1;
+                visibility: visible;
+            }
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        @keyframes welcomePulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .control-panel, .stats-display {
+                position: fixed;
+                bottom: 20px;
+                top: auto;
+                left: 10px;
+                right: 10px;
+                width: auto;
+            }
+            
+            .stats-display {
+                bottom: auto;
+                top: 10px;
+                right: 10px;
+                left: auto;
+                min-width: 150px;
+                padding: 15px;
+            }
+            
+            .control-panel {
+                bottom: 10px;
+            }
+            
+            .unicorn {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome overlay -->
+    <div class="welcome-overlay">
+        <div class="welcome-content">
+            🦄💖 Welcome jinlululouisej! 💖🦄<br>
+            <div style="font-size: 1.5rem; margin-top: 15px;">
+                Your Pink Unicorn Physics Playground!
+            </div>
+            <div style="font-size: 1rem; margin-top: 10px;">
+                Drag, throw, and watch the magic! ✨
+            </div>
+        </div>
+    </div>
+
+    <!-- Magical background particles -->
+    <div class="magic-particle" style="left: 5%; animation-delay: 0s;"></div>
+    <div class="magic-particle" style="left: 15%; animation-delay: 1s;"></div>
+    <div class="magic-particle" style="left: 25%; animation-delay: 2s;"></div>
+    <div class="magic-particle" style="left: 35%; animation-delay: 3s;"></div>
+    <div class="magic-particle" style="left: 45%; animation-delay: 4s;"></div>
+    <div class="magic-particle" style="left: 55%; animation-delay: 5s;"></div>
+    <div class="magic-particle" style="left: 65%; animation-delay: 6s;"></div>
+    <div class="magic-particle" style="left: 75%; animation-delay: 7s;"></div>
+    <div class="magic-particle" style="left: 85%; animation-delay: 8s;"></div>
+    <div class="magic-particle" style="left: 95%; animation-delay: 9s;"></div>
+
+    <!-- Game container -->
+    <div class="game-container" id="gameContainer">
+        <!-- Unicorns will be added here dynamically -->
+    </div>
+
+    <!-- Control panel -->
+    <div class="control-panel">
+        <div class="control-title">🎮 Unicorn Magic</div>
+        <button class="control-btn" onclick="addUnicorn()">🦄 Add Unicorn</button>
+        <button class="control-btn" onclick="clearUnicorns()">🧹 Clear All</button>
+        <button class="control-btn" onclick="toggleGravity()">🌍 Toggle Gravity</button>
+        <button class="control-btn" onclick="magicBurst()">✨ Magic Burst</button>
+        
+        <div class="physics-controls">
+            <div class="slider-container">
+                <label class="slider-label">Bounce Power: <span id="bounceValue">80</span>%</label>
+                <input type="range" class="slider" id="bounceSlider" min="20" max="100" value="80" oninput="updateBounce(this.value)">
+            </div>
+            
+            <div class="slider-container">
+                <label class="slider-label">Gravity: <span id="gravityValue">50</span>%</label>
+                <input type="range" class="slider" id="gravitySlider" min="10" max="100" value="50" oninput="updateGravity(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats display -->
+    <div class="stats-display">
+        <div class="stats-title">🦄 Magic Stats</div>
+        <div class="stat-item">
+            <span>Unicorns:</span>
+            <span class="stat-value" id="unicornCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Bounces:</span>
+            <span class="stat-value" id="bounceCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Magic Points:</span>
+            <span class="stat-value" id="magicPoints">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Sparkles:</span>
+            <span class="stat-value" id="sparkleCount">0</span>
+        </div>
+    </div>
+
+    <script>
+        // Physics engine variables
+        let unicorns = [];
+        let bounceCount = 0;
+        let magicPoints = 0;
+        let sparkleCount = 0;
+        let gravity = 0.5;
+        let bounceMultiplier = 0.8;
+        let friction = 0.99;
+        let isGravityOn = true;
+
+        // Animation frame
+        let animationId;
+
+        class Unicorn {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.width = 120;
+                this.height = 120;
+                this.element = this.createElement();
+                this.isDragging = false;
+                this.lastMouseX = 0;
+                this.lastMouseY = 0;
+                this.trail = [];
+            }
+
+            createElement() {
+                const element = document.createElement('div');
+                element.className = 'unicorn';
+                element.style.left = this.x + 'px';
+                element.style.top = this.y + 'px';
+                
+                // Add drag functionality
+                element.addEventListener('mousedown', (e) => this.startDrag(e));
+                element.addEventListener('touchstart', (e) => this.startDrag(e.touches[0]));
+                
+                document.getElementById('gameContainer').appendChild(element);
+                return element;
+            }
+
+            startDrag(e) {
+                this.isDragging = true;
+                this.lastMouseX = e.clientX;
+                this.lastMouseY = e.clientY;
+                this.vx = 0;
+                this.vy = 0;
+                
+                const handleMove = (e) => {
+                    if (!this.isDragging) return;
+                    
+                    const clientX = e.clientX || e.touches[0].clientX;
+                    const clientY = e.clientY || e.touches[0].clientY;
+                    
+                    this.vx = (clientX - this.lastMouseX) * 0.5;
+                    this.vy = (clientY - this.lastMouseY) * 0.5;
+                    
+                    this.x = clientX - this.width / 2;
+                    this.y = clientY - this.height / 2;
+                    
+                    this.lastMouseX = clientX;
+                    this.lastMouseY = clientY;
+                    
+                    this.createSparkle();
+                };
+                
+                const handleEnd = () => {
+                    this.isDragging = false;
+                    document.removeEventListener('mousemove', handleMove);
+                    document.removeEventListener('mouseup', handleEnd);
+                    document.removeEventListener('touchmove', handleMove);
+                    document.removeEventListener('touchend', handleEnd);
+                };
+                
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
+                document.addEventListener('touchmove', handleMove);
+                document.addEventListener('touchend', handleEnd);
+            }
+
+            update() {
+                if (this.isDragging) return;
+
+                // Apply gravity
+                if (isGravityOn) {
+                    this.vy += gravity;
+                }
+
+                // Apply friction
+                this.vx *= friction;
+                this.vy *= friction;
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Boundary collisions
+                if (this.x <= 0 || this.x >= window.innerWidth - this.width) {
+                    this.vx *= -bounceMultiplier;
+                    this.x = Math.max(0, Math.min(window.innerWidth - this.width, this.x));
+                    this.onBounce();
+                }
+
+                if (this.y <= 0 || this.y >= window.innerHeight - this.height) {
+                    this.vy *= -bounceMultiplier;
+                    this.y = Math.max(0, Math.min(window.innerHeight - this.height, this.y));
+                    this.onBounce();
+                }
+
+                // Random sparkle generation
+                if (Math.random() < 0.02) {
+                    this.createSparkle();
+                }
+
+                this.updateElement();
+            }
+
+            onBounce() {
+                bounceCount++;
+                magicPoints += 5;
+                this.createImpactEffect();
+                this.createHeartExplosion();
+                updateStats();
+            }
+
+            createSparkle() {
+                sparkleCount++;
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = (this.x + this.width/2) + 'px';
+                sparkle.style.top = (this.y + this.height/2) + 'px';
+                
+                document.getElementById('gameContainer').appendChild(sparkle);
+                
+                setTimeout(() => {
+                    sparkle.remove();
+                }, 2000);
+            }
+
+            createImpactEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'impact-effect';
+                effect.style.left = (this.x + this.width/2 - 30) + 'px';
+                effect.style.top = (this.y + this.height/2 - 30) + 'px';
+                
+                document.getElementById('gameContainer').appendChild(effect);
+                
+                setTimeout(() => {
+                    effect.remove();
+                }, 600);
+            }
+
+            createHeartExplosion() {
+                const hearts = ['💖', '💕', '💗', '💘', '💝'];
+                for (let i = 0; i < 5; i++) {
+                    const heart = document.createElement('div');
+                    heart.className = 'heart-explosion';
+                    heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                    heart.style.left = (this.x + this.width/2 + (Math.random() - 0.5) * 60) + 'px';
+                    heart.style.top = (this.y + this.height/2 + (Math.random() - 0.5) * 60) + 'px';
+                    heart.style.animationDelay = (i * 0.1) + 's';
+                    
+                    document.getElementById('gameContainer').appendChild(heart);
+                    
+                    setTimeout(() => {
+                        heart.remove();
+                    }, 1500);
+                }
+            }
+
+            updateElement() {
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+                
+                // Add rotation based on velocity
+                const rotation = Math.atan2(this.vy, this.vx) * (180 / Math.PI);
+                this.element.style.transform = `rotate(${rotation * 0.1}deg)`;
+            }
+
+            remove() {
+                this.element.remove();
+            }
+        }
+
+        function animate() {
+            unicorns.forEach(unicorn => unicorn.update());
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function addUnicorn() {
+            const x = Math.random() * (window.innerWidth - 120);
+            const y = Math.random() * (window.innerHeight - 120);
+            const unicorn = new Unicorn(x, y);
+            unicorns.push(unicorn);
+            updateStats();
+        }
+
+        function clearUnicorns() {
+            unicorns.forEach(unicorn => unicorn.remove());
+            unicorns = [];
+            bounceCount = 0;
+            magicPoints = 0;
+            sparkleCount = 0;
+            updateStats();
+        }
+
+        function toggleGravity() {
+            isGravityOn = !isGravityOn;
+            const btn = event.target;
+            btn.textContent = isGravityOn ? '🌍 Toggle Gravity' : '🚀 Toggle Gravity';
+        }
+
+        function magicBurst() {
+            magicPoints += 50;
+            unicorns.forEach(unicorn => {
+                unicorn.vx += (Math.random() - 0.5) * 20;
+                unicorn.vy += (Math.random() - 0.5) * 20;
+                unicorn.createSparkle();
+                unicorn.createHeartExplosion();
+            });
+            updateStats();
+        }
+
+        function updateBounce(value) {
+            bounceMultiplier = value / 100;
+            document.getElementById('bounceValue').textContent = value;
+        }
+
+        function updateGravity(value) {
+            gravity = value / 100;
+            document.getElementById('gravityValue').textContent = value;
+        }
+
+        function updateStats() {
+            document.getElementById('unicornCount').textContent = unicorns.length;
+            document.getElementById('bounceCount').textContent = bounceCount;
+            document.getElementById('magicPoints').textContent = magicPoints;
+            document.getElementById('sparkleCount').textContent = sparkleCount;
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            // Add initial unicorn
+            addUnicorn();
+            
+            // Start animation loop
+            animate();
+            
+            // Add click to create unicorns
+            document.getElementById('gameContainer').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    const unicorn = new Unicorn(e.clientX - 60, e.clientY - 60);
+                    unicorns.push(unicorn);
+                    updateStats();
+                }
+            });
+        });
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        });
+    </script>
+</body>
+</html>
